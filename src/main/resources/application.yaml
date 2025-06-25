@@ -37,7 +37,12 @@ api:
   server:
     description: Local development
     url: http://localhost:8080
-    
+
+security:
+  jwt:
+    secret-key: c25e794ddd4539bc81573741a2f1e06e507645c6903570ddf9ccd040b2d6e8dc
+    expiration-time: 3600000
+
 management:
   endpoint:
     health:

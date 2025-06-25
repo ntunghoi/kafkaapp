@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfiguration {
+    public static final String ACTUATOR_TAG = "Actuator";
     public static final String AUTHENTICATION_TAG = "Authentication";
     public static final String ACCOUNTS_TAG = "Accounts";
 
@@ -62,9 +64,19 @@ public class OpenApiConfiguration {
                 )
                 .tags(
                         List.of(
+                                new Tag().name(ACTUATOR_TAG).description("Actuator endpoints"),
                                 new Tag().name(AUTHENTICATION_TAG).description("Authentication functions"),
                                 new Tag().name(ACCOUNTS_TAG).description("Accounts related functions")
                         )
                 );
+    }
+
+    @Bean
+    public GroupedOpenApi actuatorApi() {
+        String[] paths = { "/actuator/**" };
+        return GroupedOpenApi.builder()
+                .group(ACTUATOR_TAG)
+                .pathsToMatch(paths)
+                .build();
     }
 }

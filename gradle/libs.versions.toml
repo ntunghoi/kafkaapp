@@ -1,9 +1,13 @@
 [versions]
 h2 = "2.3.232"
+jsonwebtoken = "0.12.6"
 springdoc = "2.0.2"
 
 [libraries]
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+jjwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jsonwebtoken" }
+jjwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jsonwebtoken" }
+jjwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref = "jsonwebtoken" }
 springdoc-openapi-webmvc-ui = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 
 [plugins]
