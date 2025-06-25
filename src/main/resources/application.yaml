@@ -1,0 +1,23 @@
+server:
+  error:
+    include-message: always
+  port: 8085
+spring:
+  application.name: Kafkaapp
+  datasource:
+    data: classpath:import_user_profile.sql
+    driverClassName: org.h2.Driver
+    platform: h2
+    initialization-mode: always
+    password:
+    username: sa
+    url: jdbc:h2:mem:kafkaapp
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    #defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    show-sql: true
