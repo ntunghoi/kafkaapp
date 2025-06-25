@@ -13,10 +13,11 @@ java {
     }
 }
 
-
 repositories {
     mavenCentral()
 }
+
+val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -31,10 +32,15 @@ dependencies {
 
     runtimeOnly(libs.h2)
 
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "com.vaadin.external.google", module = "android-json")
+    }
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-}
+    }
 
-tasks.test {
-    useJUnitPlatform()
+tasks {
+    test {
+        useJUnitPlatform()
+    }
 }

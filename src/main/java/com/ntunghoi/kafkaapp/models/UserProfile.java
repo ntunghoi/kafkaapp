@@ -8,6 +8,7 @@ import java.util.Collection;
 @Schema(description = "User profile")
 public interface UserProfile {
     int getId();
+    String getName();
     String getEmail();
     String getUsername();
     String getPassword();
