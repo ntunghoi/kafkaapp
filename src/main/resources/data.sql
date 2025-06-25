@@ -15,3 +15,7 @@ INSERT INTO user_roles (user_id, role_code) VALUES (1, 'client');
 INSERT INTO user_roles (user_id, role_code) VALUES (2, 'client');
 INSERT INTO user_roles (user_id, role_code) VALUES (3, 'client');
 INSERT INTO user_roles (user_id, role_code) VALUES (4, 'client');
+
+INSERT INTO exchange_rates (currency_code, rate) VALUES ('USD', 1.0);
+INSERT INTO exchange_rates (currency_code, rate) VALUES ('CHF', 0.8066);
+INSERT INTO exchange_rates (currency_code, rate) VALUES ('GBP', 0.7435);

@@ -24,3 +24,9 @@ CREATE TABLE user_roles (
     CONSTRAINT fk_user_roles_01 FOREIGN KEY (user_id) REFERENCES user_profiles(id),
     CONSTRAINT fk_user_roles_02 FOREIGN KEY (role_code) REFERENCES roles(code)
 );
+
+CREATE TABLE exchange_rates (
+    currency_code VARCHAR(3) NOT NULL PRIMARY KEY,
+    rate DECIMAL,
+    updated_at TIMESTAMP
+)
