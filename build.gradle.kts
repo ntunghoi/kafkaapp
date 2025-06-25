@@ -21,6 +21,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation(libs.springdoc.openapi.webmvc.ui)
 
     runtimeOnly(libs.h2)
 

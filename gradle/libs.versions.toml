@@ -1,8 +1,10 @@
 [versions]
 h2 = "2.3.232"
+springdoc = "2.0.2"
 
 [libraries]
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+springdoc-openapi-webmvc-ui = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 
 [plugins]
 springframework-boot = { id = "org.springframework.boot", version = "3.5.0" }
