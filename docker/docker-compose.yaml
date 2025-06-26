@@ -1,0 +1,158 @@
+services:
+  kafka-broker1:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker1
+    container_name: kafka-broker1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true" # This enables KRaft mode in Kafka
+      KAFKA_PROCESS_ROLES: controller,broker # Kafka acts as both broker and controller
+      KAFKA_NODE_ID: 1 # A unique ID for this Kafka instance
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-broker1:9093,2@kafka-broker2:9093,3@kafka-broker3:9093" # Defines the controller voters
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker1:9092,CONTROLLER://kafka-broker1:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data # where Kafka stores its logs
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Kafka will automatically create topics if needed
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3  # default replication factor for automatically created topics.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # one replica is enough for 1 broker
+      #KAFKA_LOG_RETENT ION_HOURS: 168 # Keep logs for 7 days
+      KAFKA_LOG_RETENTION_MS: -1 # Keep logs for 7 days
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # No delay for consumer rebalancing
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk" # A unique ID for the Kafka cluster
+      KAFKA_HEAP_OPTS: -Xmx2G -Xms2G
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092" ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka/broker1/data/:/var/lib/kafka/data
+
+  kafka-broker2:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker2
+    container_name: kafka-broker2
+    ports:
+      - "9094:9092"
+      - "9095:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true" # This enables KRaft mode in Kafka
+      KAFKA_PROCESS_ROLES: controller,broker # Kafka acts as both broker and controller
+      KAFKA_NODE_ID: 2 # A unique ID for this Kafka instance
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-broker1:9093,2@kafka-broker2:9093,3@kafka-broker3:9093" # Defines the controller voters
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker2:9092,CONTROLLER://kafka-broker2:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data # where Kafka stores its logs
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Kafka will automatically create topics if needed
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3  # default replication factor for automatically created topics.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # one replica is enough for 1 broker
+      #KAFKA_LOG_RETENT ION_HOURS: 168 # Keep logs for 7 days
+      KAFKA_LOG_RETENTION_MS: -1 # Keep logs for 7 days
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # No delay for consumer rebalancing
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk" # A unique ID for the Kafka cluster
+      KAFKA_HEAP_OPTS: -Xmx2G -Xms2G
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092" ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka/broker2/data:/var/lib/kafka/data
+
+  kafka-broker3:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka-broker3
+    container_name: kafka-broker3
+    ports:
+      - "9096:9092"
+      - "9097:9093"
+    environment:
+      KAFKA_KRAFT_MODE: "true" # This enables KRaft mode in Kafka
+      KAFKA_PROCESS_ROLES: controller,broker # Kafka acts as both broker and controller
+      KAFKA_NODE_ID: 3 # A unique ID for this Kafka instance
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka-broker1:9093,2@kafka-broker2:9093,3@kafka-broker3:9093" # Defines the controller voters
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker3:9092,CONTROLLER://kafka-broker3:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data # where Kafka stores its logs
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true" # Kafka will automatically create topics if needed
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3  # default replication factor for automatically created topics.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # one replica is enough for 1 broker
+      #KAFKA_LOG_RETENT ION_HOURS: 168 # Keep logs for 7 days
+      KAFKA_LOG_RETENTION_MS: -1 # Keep logs for 7 days
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0 # No delay for consumer rebalancing
+      CLUSTER_ID: "Mk3OEYBSD34fcwNTJENDM2Qk" # A unique ID for the Kafka cluster
+      KAFKA_HEAP_OPTS: -Xmx2G -Xms2G
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092" ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./kafka/broker3/data:/var/lib/kafka/data
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka-broker1:
+        condition: service_healthy
+      kafka-broker2:
+        condition: service_healthy
+      kafka-broker3:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-broker1:9092,kafka-broker2:9092,kafka-broker3:9092
+
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.29.0
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    depends_on:
+      - kafka-broker1
+      - kafka-broker2
+      - kafka-broker3
+      - schema-registry
+    ports:
+      - 8088:8088
+    environment:
+      KSQL_CONFIG_DIR: /etc/ksqldb
+      KSQL_LOG4J_OPTS: -Dlog4j.configuration=file:/etc/ksqldb/log4j.properties
+      KSQL_BOOTSTRAP_SERVERS: kafka-broker1:9092,kafka-broker2:9092,kafka-broker3:9092
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_KSQL_EXTENSION_DIR: /opt/
+      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 3
+      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.29.0
+    container_name: ksqldb-cli
+    depends_on:
+      - kafka-broker1
+      - kafka-broker2
+      - kafka-broker3
+      - ksqldb-server
+    entrypoint: /bin/sh
+    environment:
+      KSQL_CONFIG_DIR: /etc/ksqldb
+    tty: true

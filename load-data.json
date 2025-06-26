@@ -1,0 +1,6 @@
+{
+  "dataFilePath": "samples/init-data.csv",
+  "userAccountsTopicName": "user_accounts",
+  "accountTransactionsTopicName": "account_transactions",
+  "defaultUserAccountCreationDate": "2000-01-01 00:00:00"
+}

@@ -1,12 +1,16 @@
 [versions]
+commons-cli = "1.9.0"
 embedded-redis = "1.4.2"
 h2 = "2.3.232"
+jackson-csv = "2.19.1"
 jsonwebtoken = "0.12.6"
 springdoc = "2.0.2"
 
 [libraries]
+commons-cli = { group = "commons-cli", name = "commons-cli", version.ref = "commons-cli" }
 embedded-redis = { group = "com.github.codemonstur", name = "embedded-redis", version.ref = "embedded-redis" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+jackson-csv = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-csv", version.ref = "jackson-csv" }
 jjwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jsonwebtoken" }
 jjwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jsonwebtoken" }
 jjwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref = "jsonwebtoken" }

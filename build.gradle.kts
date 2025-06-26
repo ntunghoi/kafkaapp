@@ -26,7 +26,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation(libs.commons.cli)
     implementation(libs.embedded.redis)
+    implementation(libs.jackson.csv)
     implementation(libs.jjwt.api)
     implementation(libs.jjwt.impl)
     implementation(libs.jjwt.jackson)
@@ -45,4 +48,23 @@ tasks {
     test {
         useJUnitPlatform()
     }
+}
+
+// Example: ./gradlew bootRunCli -Pargs="-i load-data.json"
+tasks.register("bootRunCli") {
+    group = "application"
+    description = "Runs the Spring Boot with 'cli' profile"
+    doFirst {
+        tasks.bootRun.configure {
+            if (project.hasProperty("args")) {
+                args(project.property("args"))
+            }
+            //systemProperty("logging.level.root", "OFF")
+            systemProperty("logging.level.com.ntunghoi", "DEBUG")
+            systemProperty("spring.main.banner-mode", "off")
+            systemProperty("spring.profiles.active", "cli")
+        }
+    }
+
+    finalizedBy("bootRun")
 }
