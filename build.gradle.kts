@@ -15,9 +15,10 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://packages.confluent.io/maven/")
+    }
 }
-
-val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -33,16 +34,21 @@ dependencies {
     implementation(libs.jjwt.api)
     implementation(libs.jjwt.impl)
     implementation(libs.jjwt.jackson)
+    implementation(libs.ksql.api.client) {
+        exclude(group = "ch.qos.reload4j", module = "reload4j")
+        exclude(group = "org.slf4j", module = "slf4j-reload4j")
+    }
     implementation(libs.springdoc.openapi.webmvc.ui)
 
     runtimeOnly(libs.h2)
+    runtimeOnly(libs.kafka.streams)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "com.vaadin.external.google", module = "android-json")
     }
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    }
+}
 
 tasks {
     test {

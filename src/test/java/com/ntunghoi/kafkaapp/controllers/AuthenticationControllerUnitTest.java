@@ -28,8 +28,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthenticationController.class)
 @Import({
@@ -77,28 +76,40 @@ public class AuthenticationControllerUnitTest {
             void test_AuthenticationController_SignUp_Success() throws Exception {
                 when(systemDataRepository.findByCode("client")).thenReturn(Optional.of(roleEntity));
 
+                String email = "email1@email.com";
                 when(userProfileEntity.getId()).thenReturn(0);
                 when(userProfileEntity.getName()).thenReturn("user1");
-                when(userProfileEntity.getEmail()).thenReturn("email1@email.com");
+                when(userProfileEntity.getEmail()).thenReturn(email);
+                when(userProfileEntity.getUsername()).thenReturn(email);
                 when(userProfileEntity.getPassword()).thenReturn("password");
+                when(userProfileEntity.getPreferredCurrency()).thenReturn("EUR");
+                when(userProfileEntity.isEnabled()).thenReturn(true);
+                when(userProfileEntity.isCredentialsNonExpired()).thenReturn(true);
+                when(userProfileEntity.isAccountNonLocked()).thenReturn(true);
                 when(userProfilesRepository.save(any())).thenReturn(userProfileEntity);
 
                 mockMvc.perform(
-                        postRequestBuilder()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(toPostBody(
-                                                Map.of(
-                                                        "email", userProfileEntity.getEmail(),
-                                                        "name", userProfileEntity.getName(),
-                                                        "password", userProfileEntity.getPassword(),
-                                                        "confirm_password", userProfileEntity.getPassword()
+                                postRequestBuilder()
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(toPostBody(
+                                                        Map.of(
+                                                                "email", userProfileEntity.getEmail(),
+                                                                "name", userProfileEntity.getName(),
+                                                                "password", userProfileEntity.getPassword(),
+                                                                "confirm_password", userProfileEntity.getPassword()
+                                                        )
                                                 )
                                         )
-                                )
-                ).andExpect(status().isOk()
-                ).andExpect(
-                        content().string("{\"id\":0,\"name\":\"user1\",\"password\":\"password\",\"email\":\"email1@email.com\",\"preferredCurrency\":null,\"enabled\":false,\"credentialsNonExpired\":false,\"accountNonExpired\":false,\"username\":null,\"authorities\":[],\"accountNonLocked\":false}")
-                );
+                        ).andExpect(status().isOk())
+                        .andExpect(jsonPath("id").value(userProfileEntity.getId()))
+                        .andExpect(jsonPath("name").value(userProfileEntity.getName()))
+                        .andExpect(jsonPath("password").value(userProfileEntity.getPassword()))
+                        .andExpect(jsonPath("preferredCurrency").value(userProfileEntity.getPreferredCurrency()))
+                        .andExpect(jsonPath("email").value(userProfileEntity.getEmail()))
+                        .andExpect(jsonPath("username").value(userProfileEntity.getUsername()))
+                        .andExpect(jsonPath("enabled").value(userProfileEntity.isEnabled()))
+                        .andExpect(jsonPath("accountNonLocked").value(userProfileEntity.isAccountNonLocked()))
+                        .andExpect(jsonPath("credentialsNonExpired").value(userProfileEntity.isCredentialsNonExpired()));
                 verify(userProfilesRepository, times(1)).save(any());
             }
         }
@@ -129,9 +140,10 @@ public class AuthenticationControllerUnitTest {
                                                 )
                                         )
                         ).andExpect(status().isBadRequest())
-                        .andExpect(
-                                content().string("{\"password\":\"Value cannot be blank\",\"name\":\"Value cannot be blank\",\"email\":\"Value cannot be blank\",\"confirm_password\":\"Value cannot be blank\"}")
-                        );
+                        .andExpect(jsonPath("name").value("Value cannot be blank"))
+                        .andExpect(jsonPath("email").value("Value cannot be blank"))
+                        .andExpect(jsonPath("password").value("Value cannot be blank"))
+                        .andExpect(jsonPath("confirm_password").value("Value cannot be blank"));
             }
 
             @Test
@@ -169,9 +181,7 @@ public class AuthenticationControllerUnitTest {
                                                 )
                                         )
                         ).andExpect(status().isBadRequest())
-                        .andExpect(
-                                content().string("{\"email\":\"Must be a valid email address\"}")
-                        );
+                        .andExpect(jsonPath("email").value( "Must be a valid email address"));
             }
         }
     }
@@ -213,9 +223,8 @@ public class AuthenticationControllerUnitTest {
                                                 )
                                         )
                         ).andExpect(status().isOk())
-                        .andExpect(
-                                content().string(String.format("{\"jwtToken\":\"%s\",\"expireInSeconds\":%d}", jwtToken, expireInSeconds))
-                        );
+                        .andExpect(jsonPath("jwtToken").value(jwtToken))
+                        .andExpect(jsonPath("expireInSeconds").value(expireInSeconds));
                 verify(userProfilesRepository, times(2)).findByEmail(any());
             }
         }
@@ -237,7 +246,7 @@ public class AuthenticationControllerUnitTest {
                                         )
                         ).andExpect(status().isBadRequest())
                         .andExpect(
-                                content().string("{\"email\":\"Must be a valid email address\"}")
+                                jsonPath("email").value("Must be a valid email address")
                         );
             }
 

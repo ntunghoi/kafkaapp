@@ -70,13 +70,4 @@ public class OpenApiConfiguration {
                         )
                 );
     }
-
-    @Bean
-    public GroupedOpenApi actuatorApi() {
-        String[] paths = { "/actuator/**" };
-        return GroupedOpenApi.builder()
-                .group(ACTUATOR_TAG)
-                .pathsToMatch(paths)
-                .build();
-    }
 }

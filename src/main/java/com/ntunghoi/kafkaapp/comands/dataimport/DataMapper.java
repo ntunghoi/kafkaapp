@@ -1,6 +1,7 @@
 package com.ntunghoi.kafkaapp.comands.dataimport;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ntunghoi.kafkaapp.models.AccountTransaction;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -32,6 +33,22 @@ public class DataMapper {
                 transactionDate.toInstant().toEpochMilli(),
                 raw.get("account_number").asText(),
                 raw.get("description").asText()
+        );
+    }
+
+    public static AccountTransaction toAccountTransaction(JsonNode node) {
+        String[] tokens = node.get("AMOUNT_WITH_CURRENCY").asText().split(" ");
+        BigDecimal amount = new BigDecimal(tokens[0]);
+        String currency = tokens[1];
+
+        return new AccountTransaction(
+                node.get("TRANSACTION_ID").asText(),
+                amount,
+                currency,
+                node.get("ACCOUNT_NUMBER").asText(),
+                node.get("VALUE_DATE").asLong(),
+                node.get("VALUE_TIMESTAMP").asLong(),
+                node.get("DESCRIPTION").asText()
         );
     }
 }

@@ -36,14 +36,14 @@ public class SecurityConfiguration {
 
     private final AuthEntryPointJwt unauthorizedHandler;
 
-    @Value("${springdoc-swagger-ui.path}")
+    @Value("${springdoc.swagger-ui.path}")
     private String swaggerUiPath;
 
     @Value("${springdoc.api-docs.path}")
     private String apiDocsPath;
 
-    @Value("${spring.h2.console.path}")
-    private String h2ConsolePath;
+    @Value("${spring.h2.console.enabled}")
+    private boolean ish2ConsoleEnabled;
 
     public SecurityConfiguration(
             JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -69,16 +69,19 @@ public class SecurityConfiguration {
                 .headers(headers ->
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
-                .authorizeHttpRequests(authorize ->
-                        authorize
-                                .requestMatchers("/actuator/**").permitAll()
-                                .requestMatchers("/auth/**").permitAll()
-                                .requestMatchers(swaggerUiPath).permitAll()
-                                .requestMatchers(swaggerUIPathPattern).permitAll()
-                                .requestMatchers(apiDocsPathPattern).permitAll()
-                                .requestMatchers(toH2Console()).permitAll()
-                                .anyRequest()
-                                .authenticated()
+                .authorizeHttpRequests(authorize -> {
+                            if(ish2ConsoleEnabled) {
+                                authorize.requestMatchers(toH2Console()).permitAll();
+                            }
+                            authorize
+                                    .requestMatchers("/actuator/**").permitAll()
+                                    .requestMatchers("/auth/**").permitAll()
+                                    .requestMatchers(swaggerUiPath).permitAll()
+                                    .requestMatchers(swaggerUIPathPattern).permitAll()
+                                    .requestMatchers(apiDocsPathPattern).permitAll()
+                                    .anyRequest()
+                                    .authenticated();
+                        }
                 )
                 .exceptionHandling(exception -> {
                     exception.authenticationEntryPoint(unauthorizedHandler);

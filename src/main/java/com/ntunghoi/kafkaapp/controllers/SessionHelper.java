@@ -28,5 +28,7 @@ public class SessionHelper {
         return Integer.parseInt(session.getAttribute(SESSION_KEY_USER_ID).toString());
     }
 
-
+    public String getPreferredCurrency() {
+        return session.getAttribute(SESSION_KEY_PREFERRED_CURRENCY).toString();
+    }
 }
