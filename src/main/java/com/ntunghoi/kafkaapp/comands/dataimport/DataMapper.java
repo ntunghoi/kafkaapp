@@ -36,7 +36,7 @@ public class DataMapper {
         );
     }
 
-    public static AccountTransaction toAccountTransaction(JsonNode node) {
+    public static AccountTransaction toAccountTransaction(String accountNumber, JsonNode node) {
         String[] tokens = node.get("AMOUNT_WITH_CURRENCY").asText().split(" ");
         BigDecimal amount = new BigDecimal(tokens[0]);
         String currency = tokens[1];
@@ -45,7 +45,7 @@ public class DataMapper {
                 node.get("TRANSACTION_ID").asText(),
                 amount,
                 currency,
-                node.get("ACCOUNT_NUMBER").asText(),
+                accountNumber,
                 node.get("VALUE_DATE").asLong(),
                 node.get("VALUE_TIMESTAMP").asLong(),
                 node.get("DESCRIPTION").asText()

@@ -3,6 +3,7 @@ package com.ntunghoi.kafkaapp.components;
 import io.confluent.ksql.api.client.Client;
 import io.confluent.ksql.api.client.ClientOptions;
 import io.confluent.ksql.api.client.Row;
+import io.confluent.ksql.api.client.StreamedQueryResult;
 import jakarta.annotation.PostConstruct;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -36,27 +36,27 @@ public class KsqlClient<T> {
     public interface DataLoaderHelper<T> {
         String getQuery();
 
-        T parse(Row raw) throws Exception;
+        boolean parse(Row raw) throws Exception;
 
         void onError(Throwable throwable);
+
+        List<T> getItems();
     }
 
     public static class DataLoader<T> implements Subscriber<Row> {
         private int index;
         private Subscription subscription;
-        private final List<T> items;
         private final CompletableFuture<List<T>> completableFuture;
         private final DataLoaderHelper<T> helper;
 
         public DataLoader(DataLoaderHelper<T> helper, CompletableFuture<List<T>> completableFuture) {
-            items = new ArrayList<>();
             this.helper = helper;
             this.completableFuture = completableFuture;
         }
 
         @Override
         public void onSubscribe(Subscription subscription) {
-            System.out.printf("onSubscribe %n");
+            logger.info("onSubscribe");
             this.subscription = subscription;
             this.index = 0;
             subscription.request(1);
@@ -64,22 +64,28 @@ public class KsqlClient<T> {
 
         @Override
         public void onNext(Row row) {
+            boolean isDone = false;
             try {
-                items.add(helper.parse(row));
+                isDone = helper.parse(row);
             } catch (Exception exception) {
                 helper.onError(new Exception(
                         String.format("Error in processing data in row %d: %s", index, row),
                         exception
                 ));
             } finally {
-                index++;
-                subscription.request(1);
+                if(isDone) {
+                    subscription.cancel();
+                    onComplete();
+                } else {
+                    index++;
+                    subscription.request(1);
+                }
             }
         }
 
         @Override
         public void onComplete() {
-            this.completableFuture.complete(items);
+            this.completableFuture.complete(helper.getItems());
         }
 
         @Override
@@ -100,25 +106,21 @@ public class KsqlClient<T> {
 
     public List<T> executeQuery(DataLoaderHelper<T> dataLoaderHelper) throws Exception {
         try (Client ksqlClient = Client.create(ksqlClientOptions)) {
-            CompletableFuture<List<T>> completableFuture = ksqlClient
-                    .streamQuery(dataLoaderHelper.getQuery(), queryProperties)
-                    .thenCompose(streamedQueryResult -> {
-                        System.out.println("Receiving data ...");
-                        CompletableFuture<List<T>> result = new CompletableFuture<>();
-                        streamedQueryResult.subscribe(
-                                new DataLoader<T>(
-                                        dataLoaderHelper,
-                                        result
-                                ));
-
-                        return result;
-                    })
-                    .exceptionally(throwable -> {
-                        logger.error("Error: {}", throwable.getMessage());
-                        return null;
-                    });
-
-            return completableFuture.get(10, TimeUnit.SECONDS);
+            System.out.println(dataLoaderHelper.getQuery());
+            StreamedQueryResult streamedQueryResult = ksqlClient.streamQuery(dataLoaderHelper.getQuery(), queryProperties).get();
+            CompletableFuture<List<T>> future = new CompletableFuture<>();
+            streamedQueryResult.subscribe(new DataLoader<>(dataLoaderHelper, future));
+            List<T> result = future.get(10, TimeUnit.SECONDS);
+            logger.info("streamQueryResult.isComplete: {}", streamedQueryResult.isComplete());
+            if(!streamedQueryResult.isComplete()) {
+                try {
+                    CompletableFuture<Void> t = ksqlClient.terminatePushQuery(streamedQueryResult.queryID());
+                    t.get();
+                } catch(Exception e) {
+                    // ignore exception here
+                }
+            }
+            return result;
         } catch (TimeoutException timeoutException) {
             throw new Exception("Timeout in retrieving data from KsqlDB", timeoutException);
         } catch (Exception exception) {

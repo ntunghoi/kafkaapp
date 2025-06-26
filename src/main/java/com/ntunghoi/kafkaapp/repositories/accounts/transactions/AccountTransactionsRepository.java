@@ -2,6 +2,8 @@ package com.ntunghoi.kafkaapp.repositories.accounts.transactions;
 
 import com.ntunghoi.kafkaapp.components.KsqlClient;
 import com.ntunghoi.kafkaapp.models.AccountTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -9,11 +11,12 @@ import java.util.List;
 
 @Repository
 public class AccountTransactionsRepository {
-    private final KsqlClient<List<AccountTransaction>> ksqlClient;
+    private final static Logger logger = LoggerFactory.getLogger(AccountTransactionsRepository.class);
+    private final KsqlClient<AccountTransaction> ksqlClient;
 
     @Autowired
     public AccountTransactionsRepository(
-            KsqlClient<List<AccountTransaction>> ksqlClient
+            KsqlClient<AccountTransaction> ksqlClient
     ) {
         this.ksqlClient = ksqlClient;
     }
@@ -21,9 +24,12 @@ public class AccountTransactionsRepository {
     public interface QueryByUserDate {
         int userId();
 
+        String accountNumber();
+
         long startDate();
 
         long endDate();
+        int size();
     }
 
     public List<AccountTransaction> getTransactionsByUserDate(
@@ -33,14 +39,15 @@ public class AccountTransactionsRepository {
                 .executeQuery(
                         new TransactionsByUserValueDateLoader(
                                 query.userId(),
+                                query.accountNumber(),
                                 query.startDate(),
                                 query.endDate(),
+                                query.size(),
                                 throwable -> {
-                                    System.err.printf("Error occurred: %s%n", throwable.getMessage());
-                                    throwable.printStackTrace(System.err);
+                                    logger.error("Error occurred: {}", throwable.getMessage());
                                 }
                         )
-                ).stream().flatMap(List::stream)
+                ).stream()
                 .toList();
     }
 }

@@ -42,6 +42,7 @@ dependencies {
 
     runtimeOnly(libs.h2)
     runtimeOnly(libs.kafka.streams)
+    runtimeOnly(libs.logback.classic)
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "com.vaadin.external.google", module = "android-json")

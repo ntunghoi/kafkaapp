@@ -23,11 +23,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.util.Date;
 
 import static com.ntunghoi.kafkaapp.configurations.OpenApiConfiguration.ACCOUNTS_TAG;
+import static com.ntunghoi.kafkaapp.services.AccountTransactionsService.AccountTransactionsQuery;
 
 @RestController
 @RequestMapping("/accounts")
@@ -62,10 +63,27 @@ public class AccountTransactionsController {
                                     mediaType = "application/json"
                             )
                     }
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No transaction found",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json"
+                            )
+                    }
             )
     })
     public DeferredResult<PagedResult<AccountTransaction>> getTransactionsByAccount(
             HttpSession session,
+            @RequestParam(
+                    name = "account_number",
+                    required = true
+            )
+            @Parameter(
+                    description = "Account number",
+                    example = "GB84CPBK83157663644901"
+            ) String accountNNumber,
             @RequestParam(
                     name = "start_date",
                     required = true
@@ -93,9 +111,9 @@ public class AccountTransactionsController {
                     required = false
             )
             @Parameter(
-                    description = "Page number",
-                    example = "0"
-            ) int page,
+                    description = "Offset of the result",
+                    example = "1704519941000"
+            ) long offset,
             @RequestParam(
                     defaultValue = "20",
                     required = false
@@ -108,42 +126,53 @@ public class AccountTransactionsController {
         DeferredResult<PagedResult<AccountTransaction>>
                 deferredResult = new DeferredResult<>(10000L);
 
-        Instant now = Instant.now();
-        Instant from = startDate.toInstant(ZoneOffset.UTC);
-        Instant to = endDate.toInstant(ZoneOffset.UTC);
+        ZoneId zoneId = ZoneId.systemDefault();
+        ZonedDateTime zonedStartDate = startDate.atZone(zoneId);
+        ZonedDateTime zonedEndDate = endDate.atZone(zoneId);
+        ZonedDateTime zonedNow = LocalDateTime.now().atZone(zoneId);
 
-        if (from.isAfter(now)) {
+        if (zonedStartDate.isAfter(zonedNow)) {
             throw new BadRequestDataException("Start date should not be a future date");
         }
 
-        if (to.isAfter(now)) {
+        if (zonedEndDate.isAfter(zonedNow)) {
             throw new BadRequestDataException("End date should not be a future date");
         }
 
-        if (from.isAfter(to)) {
+        if (zonedStartDate.isAfter(zonedEndDate)) {
             throw new BadRequestDataException("Start date should not be later than the end date");
+        }
+
+        ZonedDateTime zonedOffset = offset != 0 ?ZonedDateTime.ofInstant(Instant.ofEpochMilli(offset), zoneId) : zonedStartDate;
+
+        if (zonedOffset.isBefore(zonedStartDate) || zonedOffset.isAfter(zonedEndDate)) {
+            throw new BadRequestDataException("Offset if present should in between start date and end date parameters");
         }
 
         SessionHelper sessionHelper = new SessionHelper(session);
         logger.info("Debugging: {}", sessionHelper.getPreferredCurrency());
         try {
             accountTransactionsService.getAccountTransactions(
-                    new AccountTransactionsService.AccountTransactionsQuery(
+                    new AccountTransactionsQuery(
                             sessionHelper.getUserId(),
+                            accountNNumber,
                             sessionHelper.getPreferredCurrency(),
-                            from.toEpochMilli(),
-                            to.toEpochMilli(),
-                            page,
-                            size
+                            zonedOffset.toLocalDate().atStartOfDay().atZone(zoneId).toInstant().toEpochMilli(),
+                            zonedEndDate.toInstant().toEpochMilli(),
+                            offset,
+                            size == 0 ? 20 : size
                     ),
                     result -> {
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                        result.data().forEach(accountTransaction ->
+                            logger.info("{} - {}", accountTransaction.id(), simpleDateFormat.format(new Date(accountTransaction.valueTimestamp())))
+                        );
                         boolean isDone = deferredResult.setResult(result);
                         logger.info("Is result set and passed on for handling? {}", isDone);
                     }
             );
         } catch (Exception exception) {
-            logger.info("Exception: {}", exception.getMessage());
-            exception.printStackTrace(System.err);
+            logger.error("Exception: {}\n", exception.getMessage(), exception);
             throw new UnknownErrorException(
                     "Error in retrieving transaction data",
                     exception

@@ -1,5 +1,6 @@
 package com.ntunghoi.kafkaapp.services;
 
+import com.ntunghoi.kafkaapp.exceptions.SystemConfigurationException;
 import com.ntunghoi.kafkaapp.models.AccountTransaction;
 import com.ntunghoi.kafkaapp.models.ExchangeRate;
 import com.ntunghoi.kafkaapp.models.PagedResult;
@@ -9,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,10 +34,11 @@ public class AccountTransactionsService {
 
     public record AccountTransactionsQuery(
             int userId,
+            String accountNumber,
             String preferredCurrency,
             long startDate,
             long endDate,
-            long next,
+            long offset,
             int size
     ) implements AccountTransactionsRepository.QueryByUserDate {
     }
@@ -43,59 +47,69 @@ public class AccountTransactionsService {
             AccountTransactionsQuery query,
             Consumer<PagedResult<AccountTransaction>> onData
     ) throws Exception {
-        ExchangeRate exchangeRate = exchangeRatesService.getExchangeRate(query.preferredCurrency);
-
-        System.out.printf("Next: %d%n", query.next());
         List<AccountTransaction> allAccountTransactions =
                 accountTransactionsRepository
                         .getTransactionsByUserDate(query)
                         .stream()
                         .sorted(Comparator.comparingLong(AccountTransaction::valueTimestamp))
                         .toList();
-        System.out.printf("Number of all account transactions: %d%n", allAccountTransactions.size());
         AtomicInteger counter = new AtomicInteger(-1);
         int index = allAccountTransactions
                 .stream()
                 .filter(accountTransaction -> {
                     counter.getAndIncrement();
-                    return accountTransaction.valueTimestamp() > query.next();
+                    return accountTransaction.valueTimestamp() > query.offset();
                 })
                 .mapToInt(accountTransaction -> counter.get())
                 .findFirst()
                 .orElse(-1);
 
         if(index == -1) {
-            onData.accept( new PagedResult<>(
-                    List.of(),
-                    query.size(),
-                    0,
-                    0,
-                    0
-            ));
+            onData.accept( new PagedResult<>(query.preferredCurrency));
         } else {
-            List<AccountTransaction> accountTransactions = allAccountTransactions.subList(index, Math.min(index + query.size(), allAccountTransactions.size() - 1));
-            System.out.printf("Index: %d / accountTransactions.size(): %d%n", index, accountTransactions.size());
+            List<AccountTransaction> accountTransactions = allAccountTransactions.subList(index, Math.min(index + query.size(), allAccountTransactions.size()));
             long next = (accountTransactions.size() + index > allAccountTransactions.size())
                     ? -1 : accountTransactions.getLast().valueTimestamp();
-            System.out.println("next: " + next);
-            onData.accept(
-                    (new PagedResult<>(
-                            accountTransactions,
-                            query.size(),
-                            next,
-                            accountTransactions.size(),
-                            calculateTotalPages(allAccountTransactions.size(), query.size())
-                    )));
+            onData.accept(prepare(query.preferredCurrency, accountTransactions, query.size(), next));
         }
-
-
     }
 
-    private int calculateTotalPages(int total, int pageSize) {
-        if (total == 0) {
-            return 0;
+    private PagedResult<AccountTransaction> prepare(
+            String preferredCurrency,
+            List<AccountTransaction> accountTransactions,
+            int size,
+            long offset
+    ) throws SystemConfigurationException{
+        BigDecimal totalCredit = BigDecimal.valueOf(0);
+        BigDecimal totalDebit = BigDecimal.valueOf(0);
+
+        for(AccountTransaction accountTransaction: accountTransactions) {
+            BigDecimal amount = convert(accountTransaction.amount(), accountTransaction.currency(), preferredCurrency);
+            if(amount.compareTo(BigDecimal.ZERO) > 0) {
+                totalCredit = totalCredit.add(amount);
+            } else if(amount.compareTo(BigDecimal.ZERO) < 0) {
+                totalDebit = totalDebit.add(amount);
+            }
         }
 
-        return (int) Math.ceil((double) total / pageSize);
+        return new PagedResult<>(
+                accountTransactions,
+                totalCredit,
+                totalDebit,
+                preferredCurrency,
+                size,
+                offset,
+                accountTransactions.size()
+        );
+    }
+
+    private BigDecimal convert(BigDecimal amount, String sourceCurrencyCode, String targetCurrencyCode) throws SystemConfigurationException {
+        if(sourceCurrencyCode.equals(targetCurrencyCode)) {
+            return amount;
+        }
+
+        ExchangeRate sourceExchangeRate = exchangeRatesService.getExchangeRate(sourceCurrencyCode);
+        ExchangeRate targetExchangeRate = exchangeRatesService.getExchangeRate(targetCurrencyCode);
+        return amount.divide(sourceExchangeRate.getRate(), 4, RoundingMode.HALF_UP).multiply(targetExchangeRate.getRate());
     }
 }

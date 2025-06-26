@@ -113,11 +113,11 @@ CREATE TABLE transactions_by_user_value_date WITH (
     KEY_FORMAT = 'AVRO'
 ) AS SELECT
     user_id,
+    account_number,
     value_date,
     COLLECT_LIST(
         STRUCT(
             transaction_id := transaction_id,
-            account_number := account_number,
             amount_with_currency := amount_with_currency,
             value_date := value_date,
             value_timestamp := value_timestamp,
@@ -127,5 +127,5 @@ CREATE TABLE transactions_by_user_value_date WITH (
 FROM
     user_account_transactions_stream
 GROUP BY
-    user_id, value_date;
+    user_id, account_number, value_date;
 ```

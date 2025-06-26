@@ -1,0 +1,21 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ksqlDB client's own logging -->
+    <logger name="io.confluent.ksql.api.client" level="INFO"/>
+
+    <!-- Vert.x core logging -->
+    <logger name="io.vertx" level="INFO"/>
+
+    <!-- Netty's detailed network activity logging -->
+    <!-- Use DEBUG first. If you need even more, change to TRACE -->
+    <logger name="io.netty" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

@@ -102,14 +102,28 @@ public class AccountTransactionControllerUnitTest {
                         .andExpect(
                                 status().isBadRequest()
                         ).andExpect(
-                                content().string("Missing value for parameter start_date")
+                                content().string("Missing value for parameter account_number")
                         );
             }
 
             @Test
-            void test_GetTransactionsByAccount_ValidJwt_StartDateOnly() throws Exception {
+            void test_GetTransactionsByAccount_ValidJwt_AccountNumber() throws Exception {
                 mockMvc.perform(
                         getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
+                ).andExpect(
+                        status().isBadRequest()
+                ).andExpect(
+                        content().string("Missing value for parameter start_date")
+                );
+
+            }
+
+            @Test
+            void test_GetTransactionsByAccount_ValidJwt_MissingEndDate() throws Exception {
+                mockMvc.perform(
+                        getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
                                 .queryParam("start_date", "2024-01-08T00:00:00")
                 ).andExpect(
                         status().isBadRequest()
@@ -119,9 +133,10 @@ public class AccountTransactionControllerUnitTest {
             }
 
             @Test
-            void test_GetTransactionsByAccount_ValidJwt_EndDateOnly() throws Exception {
+            void test_GetTransactionsByAccount_ValidJwt_MissingStartDate() throws Exception {
                 mockMvc.perform(
                         getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
                                 .queryParam("end_date", "2024-01-09T00:00:00")
                 ).andExpect(
                         status().isBadRequest()
@@ -145,6 +160,7 @@ public class AccountTransactionControllerUnitTest {
                 System.out.println(futureDate);
                 mockMvc.perform(
                         getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
                                 .queryParam("start_date", futureDate)
                                 .queryParam("end_date", "2024-01-01T00:00:00")
                 ).andExpect(
@@ -158,6 +174,7 @@ public class AccountTransactionControllerUnitTest {
             void test_GetTransactionsByAccount_ValidJwt_EndDateFutureDate() throws Exception {
                 mockMvc.perform(
                         getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
                                 .queryParam("start_date", "2024-01-10T00:00:00")
                                 .queryParam("end_date", futureDate)
                 ).andExpect(
@@ -171,6 +188,7 @@ public class AccountTransactionControllerUnitTest {
             void test_GetTransactionsByAccount_ValidJwt_StartDateLaterThanEndDate() throws Exception {
                 mockMvc.perform(
                         getRequestBuilder(validJwt)
+                                .queryParam("account_number", "DE13870962145025555422")
                                 .queryParam("start_date", "2024-01-10T00:00:00")
                                 .queryParam("end_date", "2024-01-01T00:00:00")
                 ).andExpect(
