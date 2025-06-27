@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: gs-spring-boot-k8s
+  name: gs-spring-boot-k8s
+  namespace: "default"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gs-spring-boot-k8s
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: gs-spring-boot-k8s
+    spec:
+      containers:
+        - image: kafkaapp:1,0-SNAPSHOT
+          imagePullPolicy: Never
+          name: kuberneteslab
+          resources:
+            requests:
+              memory: 256Mi
+            limits:
+              memory: 1024Mi
+status: {}

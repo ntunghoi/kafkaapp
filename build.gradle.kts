@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootBuildImage
+
 plugins {
     id("java")
     alias(libs.plugins.springframework.boot)
@@ -74,4 +76,8 @@ tasks.register("bootRunCli") {
     }
 
     finalizedBy("bootRun")
+}
+
+tasks.getByName<BootBuildImage>("bootBuildImage") {
+    builder.set("paketobuildpacks/builder-jammy-base")
 }
