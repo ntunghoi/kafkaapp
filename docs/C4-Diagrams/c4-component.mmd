@@ -1,0 +1,30 @@
+C4Component
+    title Component diagram for Internet Banking System - API Application
+
+   ContainerDb(db, "Database", "Relational Database Schema", "Stores user registration information, hashed authentication credentials, access logs, etc.")
+
+    Container_Boundary(api, "API Application") {
+        Component(accountTransactionsRepository, "Repository for account transactions", "Spring Bean", "Leverage the KsqlDB protocol to access the transaction data in the KsqlDB.")
+        Component(userProfilesRepository, "Repository for user profile data", "Spring Bean", "Uses SQL to access user profile data in SQL database.")
+        Component(exchangeRatesRepository, "Repository for exchange rates data", "Spring Bean", "Loads the exchange rates data from Cache.")
+        Component(jwtService, "JWT Service Component", "Provides functions supporting JWT generation and validation.")
+        Component(authenticationService, "Authentication Service Component", "Spring Bean", "Provides functions for registration and authentication.")
+        Component(accountTransactionsService, "Account Transaction Service Component", "Spring Bean", "Provides functions to retrieve account transactions data.")
+        Component(jwtFilter, "Security Component", "Spring Bean", "Provides functions to generate JWT tokens based on user information and validate a given JWT token.")
+        Component(registrations, "Registration controller", "MVC RESTful Controller", "Allows users to register.")
+        Component(sessions, "Sign In Controller", "MVC RESTful Controller", "Allows users to sign in to the e-banking system.")
+        Component(transactions, "Transaction listing Controller", "MVC RESTful Controller", "Provides customers with a transaction list of their bank accounts with summary.")
+        Component(exchangeRatesLoader, "Fetch exchange rates data from API and store them in database and cache.")
+
+        Rel(jwtFilter, userProfilesRepository, "Read & write to", "JDBC")
+        Rel(jwtFilter, jwtService, "Uses")
+        Rel(authenticationService, userProfilesRepository, "Uses")
+        Rel(accountTransactionsService, accountTransactionsRepository, "Uses")
+        Rel(accountTransactionsService, exchangeRatesRepository, "Uses")
+        Rel(registrations, authenticationService, "Uses")
+        Rel(sessions, authenticationService, "Uses")
+        Rel(transactions, jwtFilter, "Uses")
+        Rel(transactions, accountTransactionsService, "Uses")
+    }
+
+

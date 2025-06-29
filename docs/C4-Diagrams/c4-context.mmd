@@ -1,0 +1,33 @@
+C4Context
+    title System Context diagram for Internet Banking System
+    Enterprise_Boundary(b0, "BankBoundary0") {
+        Person(customer, "e-Banking Customer", "A customer of the bank, with personal bank accounts.")
+
+        System(portal, "e-Banking Portal", "The customer-facing web application")
+
+        Enterprise_Boundary(b1, "BankBoundary1") {
+            System_Boundary(b2, "BankBoundary1_2") {
+                System(transaction_api, "Transaction API Service", "Provides pagination transaction history with calculated totals.")
+                System(kafka, "Banking Event System", "Stores all the transaction records in Kafka cluster.")
+                System(iam_service, "Identity & Access Management (IAM) Service", "Manages customer authentication and authorization.")
+                SystemDb(client_db, "Client information database", "Stores all of the core banking information about customers, accounts etc.")
+            }
+
+            System_Boundary(b3, "BankBoundary1_3") {
+                System_Ext(exchange_rates_cache, "Cache for exchange rate data", "Retrieve the exchange rates data from the database and store it as cache.")
+                System(exchange_rates_job, "Exchange rates schedule job", "Invoke API to retrieve exchange rates data and put them in database and cache.")
+                SystemDb(exchange_rates_db, "Exchange rate database", "Stores the exchange rates data fetched from the API endpoint.")
+                System_Ext(exchange_rates_api, "Exchange rate data", "Provides exchange rates data")
+            }
+        }
+    }
+
+    Rel(customer, portal, "Views and manages their accounts.")
+    Rel(portal, transaction_api, "Requests paginated transaction list for a given month.", "HTTPS/JSON")
+    Rel(transaction_api, iam_service, "Validates customer's access token.", "HTTPS/JSON")
+    Rel(iam_service, client_db, "Access the customer information", "SQL")
+    Rel(transaction_api, exchange_rates_cache, "Fetches current exchange rates from cache for calculations", "Redis protocal")
+    Rel(transaction_api, kafka, "Consumes transactions asynchronously.", "Kafka protocol.")
+    Rel(exchange_rates_job, exchange_rates_api, "Fetch exchange rates data.", "HTTPS/JSON")
+    Rel(exchange_rates_job, exchange_rates_db, "Update the exchange rates data in the database.", "SQL")
+    Rel(exchange_rates_job, exchange_rates_cache, "Update the exchange rates data in cache.", "Redis protocol")

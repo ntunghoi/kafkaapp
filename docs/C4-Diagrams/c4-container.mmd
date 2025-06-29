@@ -1,0 +1,19 @@
+C4Container
+    title System Container diagram for e-Banking System
+
+    Person(customer, Customer, "A customer of the bank, with personal bank accounts")
+
+
+    Person(customer, "Customer", "An e-Banking customer.")
+    System(portal, "e-Banking Portal", "The customer-facing web application.")
+    System(iam_service, "Identity & Access Management (IAM) Service", "Manages customer authentication and authorization.")
+    System(kafka, "Transaction Event Stream", "Apache Kafka cluster publishing raw transaction events.")
+    System_Ext(exchange_rate_api, "Third-Party Exchange Rate API", "Provides real-time currency exchange rates.")
+
+    System(transactions_api, "Transactions API Service", "Provides paginated transaction history with calculated totals.")
+
+    Rel(customer, portal, "Views and manages their accounts")
+    Rel(portal, transactions_api, "Requests paginated transaction list for a given month", "HTTPS/JSON")
+    Rel(transactions_api, iam_service, "Validates customer's access token", "HTTPS/JWT")
+    Rel(transactions_api, exchange_rate_api, "Fetches current exchange rates for calculations", "HTTPS/JSON")
+    Rel(transactions_api, kafka, "Consumes transaction events asynchronously", "Kafka Protocol")
