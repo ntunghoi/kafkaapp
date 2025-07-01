@@ -42,4 +42,5 @@ bin/
 .DS_Store
 
 # configurattion
-**/application.yaml
+application.yaml
+!src/test/resources/application.yaml

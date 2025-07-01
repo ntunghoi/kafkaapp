@@ -1,0 +1,97 @@
+server:
+  error:
+    include-message: always
+  port: 8085
+spring:
+  application.name: Kafkaapp
+  cache:
+    type: redis
+    redis:
+      cache-null-values: true
+      time-to-live: 40000
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    data: classpath:import_user_profile.sql
+    driverClassName: org.h2.Driver
+    platform: h2
+    initialization-mode: always
+    password:
+    username: sa
+    url: jdbc:h2:mem:kafkaapp
+  h2:
+    console:
+      enabled: false
+      path: /h2-console
+  jpa:
+    #defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  kafka:
+    bootstrap-servers: pkc-4nxnd.asia-east2.gcp.confluent.cloud:9092
+    client:
+      id: id
+    topic: account_transactions
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        acks: all
+        client:
+          id: id
+        security:
+          protocol: SASL_SSL
+        sasl:
+          mechanism: PLAIN
+          jaas:
+            config: org.apache.kafka.common.security.plain.PlainLoginModule required username='username' password='password';
+
+  #springdoc-swagger-ui:
+  #path: /swagger-ui.html
+springdoc:
+  api-docs:
+    path: /api-docs
+  show-actuator: true
+  swagger-ui:
+    path: /swagger-ui.html
+    tagsSorter: alpha
+  writer-with-order-by-keys: true
+
+api:
+  version: 1.0.0-beta
+  server:
+    description: Local development
+    url: http://localhost:8085
+
+ksqlDb-server:
+  host: host
+  port: 443
+  api:
+    key: key
+    secret: secret
+
+exchange-rate:
+  cron: "0 */2 * ? * *" # Every two minutes
+  #cron: "0 0 */2 * * ?" # Every two hours
+  url: https://v6.exchangerate-api.com/v6/api-key/latest/USD
+  currency-codes: USD,EUR,CHF,GBP
+
+security:
+  jwt:
+    secret-key: c25e794ddd4539bc81573741a2f1e06e507645c6903570ddf9ccd040b2d6e8dc
+    expiration-time: 3600000
+
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          include: diskSpace,ping
+          show-components: always
+          show-details: always
+    web:
+      exposure:
+        include: health,info,beans,env,metrics
