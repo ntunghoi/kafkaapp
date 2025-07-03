@@ -104,7 +104,7 @@ Update of the cache data via API calls are handled in a separate standalone [job
 
 ```bash
 # in project root folder
-./gradlew bootRun0
+./gradlew bootRun
 ```
 
 2. Access the API documentation
